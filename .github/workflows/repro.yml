@@ -1,0 +1,25 @@
+name: repro
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.case }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # normal and patched should pass; nolinks is expected to fail with the link() error.
+        case: [normal, nolinks, patched]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq dosfstools rsync
+      - name: Build (${{ matrix.case }})
+        run: sudo --preserve-env=PATH env "PATH=$PATH" bash scripts/build-case.sh ${{ matrix.case }}
